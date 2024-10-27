@@ -89,6 +89,30 @@ module "eks_blueprints_addons" {
   # Kubernetes Add-ons
   #---------------------------------------
 
+    ############ K8s addons
+
+    ## Cert Manager
+    enable_cert_manager = true
+    cert_manager = {
+      namespace = "cert-manager"
+      chart_version  = "v1.8.0"
+      create_namespace = true
+      set = [
+        # {
+        #   name  = "webhook.securePort"
+        #   value = "10260"
+        # },
+        {
+          name  = "installCRDs"
+          value = "true"
+        },
+        {
+          name  = "startupapicheck.timeout"
+          value = "5m"
+        }
+      ]   
+    }
+
   #---------------------------------------------------------------
   # CoreDNS Autoscaler helps to scale for large EKS Clusters
   #   Further tuning for CoreDNS is to leverage NodeLocal DNSCache -> https://kubernetes.io/docs/tasks/administer-cluster/nodelocaldns/
@@ -189,69 +213,69 @@ resource "aws_secretsmanager_secret_version" "grafana" {
 #---------------------------------------------------------------
 # Data on EKS Kubernetes Addons
 #---------------------------------------------------------------
-module "eks_data_addons" {
-  source  = "aws-ia/eks-data-addons/aws"
-  version = "~> 1.0" # ensure to update this to the latest/desired version
+# module "eks_data_addons" {
+#   source  = "aws-ia/eks-data-addons/aws"
+#   version = "~> 1.0" # ensure to update this to the latest/desired version
 
-  oidc_provider_arn = module.eks.oidc_provider_arn
-  #---------------------------------------------------------------
-  # Strimzi Kafka Add-on
-  #---------------------------------------------------------------
-  enable_strimzi_kafka_operator = true
-  strimzi_kafka_operator_helm_config = {
-    values = [templatefile("${path.module}/helm-values/strimzi-kafka-values.yaml", {
-      operating_system = "linux"
-      node_group_type  = "core"
-    })]
-  }
-}
+#   oidc_provider_arn = module.eks.oidc_provider_arn
+#   #---------------------------------------------------------------
+#   # Strimzi Kafka Add-on
+#   #---------------------------------------------------------------
+#   enable_strimzi_kafka_operator = true
+#   strimzi_kafka_operator_helm_config = {
+#     values = [templatefile("${path.module}/helm-values/strimzi-kafka-values.yaml", {
+#       operating_system = "linux"
+#       node_group_type  = "core"
+#     })]
+#   }
+# }
 
-#---------------------------------------------------------------
-# Install Kafka cluster
-# NOTE: Kafka Zookeeper and Broker pod creation may to 2 to 3 mins
-#---------------------------------------------------------------
+# #---------------------------------------------------------------
+# # Install Kafka cluster
+# # NOTE: Kafka Zookeeper and Broker pod creation may to 2 to 3 mins
+# #---------------------------------------------------------------
 
-resource "kubernetes_namespace" "kafka_namespace" {
-  metadata {
-    name = local.kafka_namespace
-  }
+# resource "kubernetes_namespace" "kafka_namespace" {
+#   metadata {
+#     name = local.kafka_namespace
+#   }
 
-  depends_on = [module.eks.cluster_name]
-}
+#   depends_on = [module.eks.cluster_name]
+# }
 
-data "kubectl_path_documents" "kafka_cluster" {
-  pattern = "${path.module}/kafka-manifests/kafka-cluster.yaml"
-}
+# data "kubectl_path_documents" "kafka_cluster" {
+#   pattern = "${path.module}/kafka-manifests/kafka-cluster.yaml"
+# }
 
-resource "kubectl_manifest" "kafka_cluster" {
-  for_each  = toset(data.kubectl_path_documents.kafka_cluster.documents)
-  yaml_body = each.value
+# resource "kubectl_manifest" "kafka_cluster" {
+#   for_each  = toset(data.kubectl_path_documents.kafka_cluster.documents)
+#   yaml_body = each.value
 
-  depends_on = [module.eks_data_addons]
-}
+#   depends_on = [module.eks_data_addons]
+# }
 
-#---------------------------------------------------------------
-# Deploy Strimzi Kafka and Zookeeper dashboards in Grafana
-#---------------------------------------------------------------
+# #---------------------------------------------------------------
+# # Deploy Strimzi Kafka and Zookeeper dashboards in Grafana
+# #---------------------------------------------------------------
 
-data "kubectl_path_documents" "podmonitor_metrics" {
-  pattern = "${path.module}/monitoring-manifests/podmonitor-*.yaml"
-}
+# data "kubectl_path_documents" "podmonitor_metrics" {
+#   pattern = "${path.module}/monitoring-manifests/podmonitor-*.yaml"
+# }
 
-resource "kubectl_manifest" "podmonitor_metrics" {
-  for_each  = toset(data.kubectl_path_documents.podmonitor_metrics.documents)
-  yaml_body = each.value
+# resource "kubectl_manifest" "podmonitor_metrics" {
+#   for_each  = toset(data.kubectl_path_documents.podmonitor_metrics.documents)
+#   yaml_body = each.value
 
-  depends_on = [module.eks_blueprints_addons]
-}
+#   depends_on = [module.eks_blueprints_addons]
+# }
 
-data "kubectl_path_documents" "grafana_strimzi_dashboard" {
-  pattern = "${path.module}/monitoring-manifests/grafana-strimzi-*-dashboard.yaml"
-}
+# data "kubectl_path_documents" "grafana_strimzi_dashboard" {
+#   pattern = "${path.module}/monitoring-manifests/grafana-strimzi-*-dashboard.yaml"
+# }
 
-resource "kubectl_manifest" "grafana_strimzi_dashboard" {
-  for_each  = toset(data.kubectl_path_documents.grafana_strimzi_dashboard.documents)
-  yaml_body = each.value
+# resource "kubectl_manifest" "grafana_strimzi_dashboard" {
+#   for_each  = toset(data.kubectl_path_documents.grafana_strimzi_dashboard.documents)
+#   yaml_body = each.value
 
-  depends_on = [module.eks_blueprints_addons]
-}
+#   depends_on = [module.eks_blueprints_addons]
+# }

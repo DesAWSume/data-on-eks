@@ -27,11 +27,11 @@ spec:
       inter.broker.protocol.version: "3.6"
     resources:
       requests:
-        memory: 58Gi
-        cpu: "6"
+        memory: 512Mi
+        cpu: "500m"
       limits:
-        memory: 64Gi
-        cpu: "8"
+        memory: 1024Mi
+        cpu: "1"
     jvmOptions:
       "-Xmx": "6g"
       "-Xms": "4g"
@@ -40,7 +40,7 @@ spec:
       volumes:
         - id: 0
           type: persistent-claim
-          size: 1000Gi
+          size: 200Gi
           class: gp3
           deleteClaim: false
     template:

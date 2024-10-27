@@ -23,4 +23,10 @@ terraform {
       version = ">= 3.1"
     }
   }
+    backend "s3" {
+    region  = "ap-southeast-2"
+    bucket  = "observability-otel-state-poc"
+    key     = "xxx/poc/terraform.tfstate"
+    encrypt = true
+  }  
 }

@@ -20,8 +20,9 @@ locals {
   partition  = data.aws_partition.current.partition
 
   tags = {
-    Blueprint  = local.name
-    GithubRepo = "github.com/awslabs/data-on-eks"
+    eks  = local.name
+    env = "poc"
+    owner = "observability-platform"
   }
 }
 
@@ -79,7 +80,7 @@ module "eks" {
       max_size     = 9
       desired_size = 3
 
-      instance_types = ["m5.xlarge"]
+      instance_types = ["t3a.large"]
 
       ebs_optimized = true
       block_device_mappings = {
@@ -108,7 +109,7 @@ module "eks" {
       max_size     = 12
       desired_size = 5
 
-      instance_types = ["r6i.2xlarge"]
+      instance_types = ["t3a.large"]
 
       ebs_optimized = true
       # This is the root filesystem Not used by the brokers
