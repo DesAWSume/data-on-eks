@@ -12,7 +12,7 @@ variable "region" {
 
 variable "eks_cluster_version" {
   description = "EKS Cluster version"
-  default     = "1.30"
+  default     = "1.31"
   type        = string
 }
 
@@ -67,28 +67,31 @@ variable "enable_amazon_prometheus" {
 }
 
 variable "enable_yunikorn" {
-  default     = true
+  default     = false
   description = "Enable Apache YuniKorn Scheduler"
   type        = bool
 }
 
-variable "aws_auth_roles" {
-  description = "additional aws auth roles"
-  type = list(
-    object(
-      {
-        rolearn  = string
-        username = string
-        groups = list(string
-        )
-      }
-    )
-  )
-  default = []
+variable "enable_jupyterhub" {
+  default     = false
+  description = "Enable Jupyter Hub"
+  type        = bool
 }
 
 variable "kms_key_admin_roles" {
   description = "list of role ARNs to add to the KMS policy"
   type        = list(string)
   default     = []
+}
+
+variable "spark_benchmark_ssd_min_size" {
+  description = "Minimum size for nodegroup of c5d 12xlarge instances to run data generation for Spark benchmark"
+  type        = number
+  default     = 0
+}
+
+variable "spark_benchmark_ssd_desired_size" {
+  description = "Desired size for nodegroup of c5d 12xlarge instances to run data generation for Spark benchmark"
+  type        = number
+  default     = 0
 }
